@@ -323,17 +323,55 @@ import SearchBar from './components/SearchBar'
 import UserModal from './components/UserModal'
 
 function App() {
-  const [users, setUsers] = useState([])
+   const [users, setUsers] = useState([]);
+   const [filteredUsers, setFilteredUsers] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState(null);
+   const [searchTerm, setSearchTerm] = useState('');
+   const [showModal, setShowModal] = useState(false);
+   const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     {/*API fetch logic*/}
+      const fetchUsers = async () => {
+         setLoading(true);
+         try {
+            const response = await fetch('https://jsonplaceholder.typicode.com/users');
+            if (!response.ok) {
+               throw new Error('Network response was not ok');
+            }  
+            const data = await response.json();
+            setUsers(data);
+            setFilteredUsers(data);
+         } catch (err) {
+            setError(err.message);
+         } finally {
+            setLoading(false);
+         }  
+      };
+      fetchUsers();
 
   }, [])
+  useEffect(() => {
+  if (searchTerm.trim() === '') {
+    setFilteredUsers(users);
+  } else {
+    const filtered = users.filter(user =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredUsers(filtered);
+  }
+}, [searchTerm, users]);
 
-  const handleUserClick = (user) => {
+
+  const handleUserClick = (user) => {  
+      setSelectedUser(user);
+      setShowModal(true);
   }
 
   const handleCloseModal = () => {
+      setShowModal(false);
+      setSelectedUser(null);
   }
 
   return (
@@ -346,14 +384,37 @@ function App() {
       </header>
 
       <Container className="my-4">
-        <SearchBar />
+  <SearchBar onSearch={setSearchTerm} />
 
-        {/* {loading && <Spinner ... />} */}
-        {/* {error && <Alert ...>{error}</Alert>} */}
-        {/* <UserList users={filteredUsers} onUserClick={handleUserClick} /> */}
+  {/* Loading spinner */}
+  {loading && (
+    <div className="text-center my-5">
+      <Spinner animation="border" role="status">
+        <span className="visually-hidden">Loading...</span>
+      </Spinner>
+    </div>
+  )}
 
-        <UserModal />
-      </Container>
+  {/* Error message */}
+  {error && (
+    <Alert variant="danger" className="text-center">
+      {error}
+    </Alert>
+  )}
+
+  {/* User list (only when not loading or error-free) */}
+  {!loading && !error && (
+    <UserList users={filteredUsers} onUserClick={handleUserClick} />
+  )}
+
+  {/* User details modal */}
+  <UserModal
+    show={showModal}
+    user={selectedUser}
+    onHide={handleCloseModal}
+  />
+</Container>
+
 
       <footer className="bg-light py-4 mt-5">
         <Container>

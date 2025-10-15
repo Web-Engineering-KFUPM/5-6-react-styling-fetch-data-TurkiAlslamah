@@ -18,7 +18,9 @@ function UserCard({ user, onUserClick }) {
           <strong>Phone:</strong> {user.phone}
         </Card.Text>
       {/* Buttotn*/}
-      <Button variant="primary" onClick={() => onUserClick(user.id)}>View Details</Button>
+<Button variant="primary" onClick={() => onUserClick(user)}>
+  View Details
+</Button>
       
 
       
